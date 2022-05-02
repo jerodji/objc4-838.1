@@ -552,8 +552,10 @@ objc_object::clearDeallocating()
 inline void
 objc_object::rootDealloc()
 {
+    //是否使用TaggedPointer优化 是直接返回
     if (isTaggedPointer()) return;  // fixme necessary?
-
+    
+    //不需要处理object_dispose的所有内容
     if (fastpath(isa.nonpointer                     &&
                  !isa.weakly_referenced             &&
                  !isa.has_assoc                     &&
@@ -565,7 +567,7 @@ objc_object::rootDealloc()
                  !isa.has_sidetable_rc))
     {
         assert(!sidetable_present());
-        free(this);
+        free(this); //释放内存
     } 
     else {
         object_dispose((id)this);

@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Bucket
-   uuid = "F5B13DF5-05F5-4B95-818A-484A72CA5F2E"
+   uuid = "2ED1B17E-8AC7-4E60-9D07-4FFF36206D1E"
    type = "1"
    version = "2.0">
    <Breakpoints>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "66928FD9-7537-46F6-AEC7-667672E27BA0"
+            uuid = "A0139191-1685-495A-B9E4-74CD245EB5CE"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "ObjcDebug/main.m"
+            filePath = "runtime/NSObject.mm"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "30"
-            endingLineNumber = "30"
-            landmarkName = "main(argc, argv)"
-            landmarkType = "9">
+            startingLineNumber = "2582"
+            endingLineNumber = "2582"
+            landmarkName = "-dealloc"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

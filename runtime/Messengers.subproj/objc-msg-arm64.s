@@ -309,6 +309,7 @@ LExit$0:
 // CacheHit: x17 = cached IMP, x10 = address of buckets, x1 = SEL, x16 = isa
 .macro CacheHit
 .if $0 == NORMAL
+//编码查找imp，并且返回x17，也就是imp
 	TailCallCachedImp x17, x10, x1, x16	// authenticate and call imp
 .elseif $0 == GETIMP
 	mov	p0, p17
@@ -327,6 +328,7 @@ LExit$0:
 .endif
 .endmacro
 
+//在cache中通过sel查找imp的核心流程
 .macro CacheLookup Mode, Function, MissLabelDynamic, MissLabelConstant
 	//
 	// Restart protocol:
@@ -350,28 +352,45 @@ LExit$0:
 	//   - other registers are set as per calling conventions
 	//
 
+//从x16中取出class移到x15中
 	mov	x15, x16			// stash the original isa
+//开始查找
 LLookupStart\Function:
 	// p1 = SEL, p16 = isa
 #if CACHE_MASK_STORAGE == CACHE_MASK_STORAGE_HIGH_16_BIG_ADDRS
+//ldr表示将一个值存入到p10寄存器中
+//x16表示p16寄存器存储的值，当前是Class
+//#数值表示一个值，这里的CACHE经过全局搜索发现是2倍的指针地址，也就是16个字节
+//#define CACHE (2 * __SIZEOF_POINTER__)
+//经计算，p10就是cache
 	ldr	p10, [x16, #CACHE]				// p10 = mask|buckets
 	lsr	p11, p10, #48			// p11 = mask
 	and	p10, p10, #0xffffffffffff	// p10 = buckets
 	and	w12, w1, w11			// x12 = _cmd & mask
+//真机64位看这个
 #elif CACHE_MASK_STORAGE == CACHE_MASK_STORAGE_HIGH_16
+//CACHE 16字节，也就是通过isa内存平移获取cache，然后cache的首地址就是 (bucket_t *)
 	ldr	p11, [x16, #CACHE]			// p11 = mask|buckets
 #if CONFIG_USE_PREOPT_CACHES
+//获取buckets
 #if __has_feature(ptrauth_calls)
 	tbnz	p11, #0, LLookupPreopt\Function
 	and	p10, p11, #0x0000ffffffffffff	// p10 = buckets
 #else
+//and表示与运算，将与上mask后的buckets值保存到p10寄存器
 	and	p10, p11, #0x0000fffffffffffe	// p10 = buckets
+//p11与#0比较，如果p11不存在，就走Function，如果存在走LLookupPreopt
 	tbnz	p11, #0, LLookupPreopt\Function
 #endif
+//按位右移7个单位，存到p12里面，p0是对象，p1是_cmd
 	eor	p12, p1, p1, LSR #7
 	and	p12, p12, p11, LSR #48		// x12 = (_cmd ^ (_cmd >> 7)) & mask
 #else
 	and	p10, p11, #0x0000ffffffffffff	// p10 = buckets
+//LSR表示逻辑向右偏移
+//p11, LSR #48表示cache偏移48位，拿到前16位，也就是得到mask
+//这个是哈希算法，p12存储的就是搜索下标（哈希地址）
+//整句表示_cmd & mask并保存到p12
 	and	p12, p1, p11, LSR #48		// x12 = _cmd & mask
 #endif // CONFIG_USE_PREOPT_CACHES
 #elif CACHE_MASK_STORAGE == CACHE_MASK_STORAGE_LOW_4
@@ -385,17 +404,27 @@ LLookupStart\Function:
 #error Unsupported cache mask storage for ARM64.
 #endif
 
+//去除掩码后bucket的内存平移
+//PTRSHIFT经全局搜索发现是3
+//LSL #(1+PTRSHIFT)表示逻辑左移4位，也就是*16
+//通过bucket的首地址进行左平移下标的16倍数并与p12相与得到bucket，并存入到p13中
 	add	p13, p10, p12, LSL #(1+PTRSHIFT)
 						// p13 = buckets + ((_cmd & mask) << (1+PTRSHIFT))
 
 						// do {
+
+//ldp表示出栈，取出bucket中的imp和sel分别存放到p17和p9
 1:	ldp	p17, p9, [x13], #-BUCKET_SIZE	//     {imp, sel} = *bucket--
+//cmp表示比较，对比p9和p1，如果相同就找到了对应的方法，返回对应imp，走CacheHit
 	cmp	p9, p1				//     if (sel != _cmd) {
+//b.ne表示如果不相同则跳转到2f
 	b.ne	3f				//         scan more
 						//     } else {
 2:	CacheHit \Mode				// hit:    call or return imp
 						//     }
+//向前查找下一个bucket，一直循环直到找到对应的方法，循环完都没有找到就调用_objc_msgSend_uncached
 3:	cbz	p9, \MissLabelDynamic		//     if (sel == 0) goto Miss;
+//通过p13和p10来判断是否是第一个bucket
 	cmp	p13, p10			// } while (bucket >= buckets)
 	b.hs	1b
 
@@ -566,23 +595,35 @@ _objc_debug_taggedpointer_classes:
 .endmacro
 #endif
 
+//进入objc_msgSend流程
 	ENTRY _objc_msgSend
+//流程开始，无需frame
 	UNWIND _objc_msgSend, NoFrame
 
+//判断p0(消息接受者)是否存在，不存在则重新开始执行objc_msgSend
 	cmp	p0, #0			// nil check and tagged pointer check
+
+//如果支持小对象类型。返回小对象或空
 #if SUPPORT_TAGGED_POINTERS
+//b是进行跳转，b.le是小于判断，也就是小于的时候LNilOrTagged
 	b.le	LNilOrTagged		//  (MSB tagged pointer looks negative)
 #else
+//等于，如果不支持小对象，就LReturnZero
 	b.eq	LReturnZero
 #endif
+//通过p13取isa
 	ldr	p13, [x0]		// p13 = isa
+//通过isa取class并保存到p16寄存器中
 	GetClassFromIsa_p16 p13, 1, x0	// p16 = class
+//LGetIsaDone是一个入口
 LGetIsaDone:
 	// calls imp or objc_msgSend_uncached
+//进入到缓存查找或者没有缓存查找方法的流程
 	CacheLookup NORMAL, _objc_msgSend, __objc_msgSend_uncached
 
 #if SUPPORT_TAGGED_POINTERS
 LNilOrTagged:
+// nil check判空处理，直接退出
 	b.eq	LReturnZero		// nil check
 	GetTaggedClass
 	b	LGetIsaDone

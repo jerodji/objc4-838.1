@@ -8173,13 +8173,18 @@ void *objc_destructInstance(id obj)
 {
     if (obj) {
         // Read all of the flags at once for performance.
-        bool cxx = obj->hasCxxDtor();
-        bool assoc = obj->hasAssociatedObjects();
+        bool cxx = obj->hasCxxDtor();/* 是否有析构函数  这个bool值取决于当前类以及父类往上是否有实例变量，如果有实例变量当前类就有.cxxDestruct，当前类或父类有此方法值=YES，都没有才=NO */
+
+        bool assoc = obj->hasAssociatedObjects(); /* 是否有关联对象*/
+
 
         // This order is important.
-        if (cxx) object_cxxDestruct(obj);
-        if (assoc) _object_remove_assocations(obj, /*deallocating*/true);
-        obj->clearDeallocating();
+        if (cxx) object_cxxDestruct(obj);/* 如果有析构函数 调用 void object_cxxDestruct(id obj)*/
+
+        if (assoc) _object_remove_assocations(obj, /*deallocating*/true); /* 如果有关联对象 移除关联对象*/
+
+        obj->clearDeallocating(); /* 调用objc_clear_deallocating()清空引用计数表*/
+
     }
 
     return obj;
