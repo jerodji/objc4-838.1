@@ -677,7 +677,7 @@ IMP class_getMethodImplementation(Class cls, SEL sel)
 
     // Translate forwarding function to C-callable external version
     if (!imp) {
-        return _objc_msgForward;
+        return _objc_msgForward;//消息转发
     }
 
     return imp;

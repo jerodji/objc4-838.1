@@ -146,8 +146,8 @@
 		83F550E0155E030800E95D3B /* objc-cache-old.mm in Sources */ = {isa = PBXBuildFile; fileRef = 83F550DF155E030800E95D3B /* objc-cache-old.mm */; };
 		87BB4EA70EC39854005D08E1 /* objc-probes.d in Sources */ = {isa = PBXBuildFile; fileRef = 87BB4E900EC39633005D08E1 /* objc-probes.d */; };
 		87D4CCD027F477490060462D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 87D4CCCF27F477490060462D /* main.m */; };
-		87D4CCDA27F477FA0060462D /* LGTeacher.m in Sources */ = {isa = PBXBuildFile; fileRef = 87D4CCD727F477FA0060462D /* LGTeacher.m */; };
-		87D4CCDB27F477FA0060462D /* LGPerson.m in Sources */ = {isa = PBXBuildFile; fileRef = 87D4CCD927F477FA0060462D /* LGPerson.m */; };
+		87D4CCDA27F477FA0060462D /* Teacher.m in Sources */ = {isa = PBXBuildFile; fileRef = 87D4CCD727F477FA0060462D /* Teacher.m */; };
+		87D4CCDB27F477FA0060462D /* Person.m in Sources */ = {isa = PBXBuildFile; fileRef = 87D4CCD927F477FA0060462D /* Person.m */; };
 		9672F7EE14D5F488007CEC96 /* NSObject.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9672F7ED14D5F488007CEC96 /* NSObject.mm */; };
 		C22F5208230EF38B001BFE14 /* objc-ptrauth.h in Headers */ = {isa = PBXBuildFile; fileRef = C22F5207230EF38B001BFE14 /* objc-ptrauth.h */; };
 		C269791A2645D7AE009C19E3 /* NSObject-private.h in Headers */ = {isa = PBXBuildFile; fileRef = C26979192645D7AE009C19E3 /* NSObject-private.h */; };
@@ -333,10 +333,10 @@
 		87BB4E900EC39633005D08E1 /* objc-probes.d */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.dtrace; name = "objc-probes.d"; path = "runtime/objc-probes.d"; sourceTree = "<group>"; };
 		87D4CCCD27F477490060462D /* ObjcDebug */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ObjcDebug; sourceTree = BUILT_PRODUCTS_DIR; };
 		87D4CCCF27F477490060462D /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		87D4CCD627F477FA0060462D /* LGPerson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LGPerson.h; sourceTree = "<group>"; };
-		87D4CCD727F477FA0060462D /* LGTeacher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LGTeacher.m; sourceTree = "<group>"; };
-		87D4CCD827F477FA0060462D /* LGTeacher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LGTeacher.h; sourceTree = "<group>"; };
-		87D4CCD927F477FA0060462D /* LGPerson.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LGPerson.m; sourceTree = "<group>"; };
+		87D4CCD627F477FA0060462D /* Person.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Person.h; sourceTree = "<group>"; };
+		87D4CCD727F477FA0060462D /* Teacher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Teacher.m; sourceTree = "<group>"; };
+		87D4CCD827F477FA0060462D /* Teacher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Teacher.h; sourceTree = "<group>"; };
+		87D4CCD927F477FA0060462D /* Person.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Person.m; sourceTree = "<group>"; };
 		9672F7ED14D5F488007CEC96 /* NSObject.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = NSObject.mm; path = runtime/NSObject.mm; sourceTree = "<group>"; };
 		C217B55222DE556D004369BA /* objc-env.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "objc-env.h"; path = "runtime/objc-env.h"; sourceTree = "<group>"; };
 		C22F5207230EF38B001BFE14 /* objc-ptrauth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "objc-ptrauth.h"; path = "runtime/objc-ptrauth.h"; sourceTree = "<group>"; };
@@ -592,10 +592,10 @@
 		87D4CCCE27F477490060462D /* ObjcDebug */ = {
 			isa = PBXGroup;
 			children = (
-				87D4CCD627F477FA0060462D /* LGPerson.h */,
-				87D4CCD927F477FA0060462D /* LGPerson.m */,
-				87D4CCD827F477FA0060462D /* LGTeacher.h */,
-				87D4CCD727F477FA0060462D /* LGTeacher.m */,
+				87D4CCD627F477FA0060462D /* Person.h */,
+				87D4CCD927F477FA0060462D /* Person.m */,
+				87D4CCD827F477FA0060462D /* Teacher.h */,
+				87D4CCD727F477FA0060462D /* Teacher.m */,
 				87D4CCCF27F477490060462D /* main.m */,
 			);
 			path = ObjcDebug;
@@ -887,8 +887,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				87D4CCD027F477490060462D /* main.m in Sources */,
-				87D4CCDB27F477FA0060462D /* LGPerson.m in Sources */,
-				87D4CCDA27F477FA0060462D /* LGTeacher.m in Sources */,
+				87D4CCDB27F477FA0060462D /* Person.m in Sources */,
+				87D4CCDA27F477FA0060462D /* Teacher.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1350,7 +1350,7 @@
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -1405,7 +1405,7 @@
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;

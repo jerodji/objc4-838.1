@@ -609,8 +609,9 @@ struct PointerModifierNop {
 * PointerModifier is applied to the element pointers retrieved from
 * the array.
 **********************************************************************/
+//参数Element:元素类型, 参数List:容器类型(method_list_t, ivar_list_t, property_list_t)
 template <typename Element, typename List, uint32_t FlagMask, typename PointerModifier = PointerModifierNop>
-struct entsize_list_tt {
+struct entsize_list_tt {// 容器 -- 模板
     uint32_t entsizeAndFlags;
     uint32_t count;
 
@@ -752,7 +753,7 @@ struct method_t {
     // and implementation.
     struct big {
         SEL name;
-        const char *types;
+        const char *types; //方法参数的描述
         MethodListIMP imp;
     };
 
@@ -775,7 +776,7 @@ private:
                     objc::inSharedCache((uintptr_t)this));
         }
     };
-
+    // 小端模式
     small &small() const {
         ASSERT(isSmall());
         return *(struct small *)((uintptr_t)this & ~(uintptr_t)1);
@@ -806,7 +807,7 @@ public:
             return ptr;
         }
     };
-
+    // big方法
     big &big() const {
         ASSERT(!isSmall());
         return *(struct big *)this;
@@ -889,7 +890,7 @@ public:
             big().imp = imp;
         }
     }
-
+    // 小端模式可以直接用这个 p *$17.get(0).getDescription()
     objc_method_description *getDescription() const {
         return isSmall() ? getSmallDescription() : (struct objc_method_description *)this;
     }
@@ -1115,7 +1116,7 @@ struct protocol_list_t {
         return list + count;
     }
 };
-
+// MARK: ro
 struct class_ro_t {
     uint32_t flags;
     uint32_t instanceStart;
@@ -1130,7 +1131,7 @@ struct class_ro_t {
     };
 
     explicit_atomic<const char *> name;
-    WrappedPtr<method_list_t, method_list_t::Ptrauth> baseMethods;
+    WrappedPtr<method_list_t, method_list_t::Ptrauth> baseMethods;//本身的方法 编译时
     protocol_list_t * baseProtocols;
     const ivar_list_t * ivars;
 
@@ -1483,7 +1484,7 @@ class protocol_array_t :
     protocol_array_t() : Super() { }
     protocol_array_t(protocol_list_t *l) : Super(l) { }
 };
-
+// MARK: rwe
 struct class_rw_ext_t {
     DECLARE_AUTHED_PTR_TEMPLATE(class_ro_t)
     class_ro_t_authed_ptr<const class_ro_t> ro;
@@ -1493,7 +1494,7 @@ struct class_rw_ext_t {
     char *demangledName;
     uint32_t version;
 };
-
+// MARK: class_rw_t
 struct class_rw_t {
     // Be warned that Symbolication knows the layout of this structure.
     uint32_t flags;
@@ -1566,7 +1567,7 @@ public:
     class_rw_ext_t *deepCopy(const class_ro_t *ro) {
         return extAlloc(ro, true);
     }
-
+    // MARK: ro
     const class_ro_t *ro() const {
         auto v = get_ro_or_rwe();
         if (slowpath(v.is<class_rw_ext_t *>())) {
@@ -1583,16 +1584,16 @@ public:
             set_ro_or_rwe(ro);
         }
     }
-
+    // 方法列表
     const method_array_t methods() const {
         auto v = get_ro_or_rwe();
-        if (v.is<class_rw_ext_t *>()) {
+        if (v.is<class_rw_ext_t *>()) { //有rwe,就从rwe里面读取方法
             return v.get<class_rw_ext_t *>(&ro_or_rw_ext)->methods;
-        } else {
+        } else { // 否则从ro里面读取方法
             return method_array_t{v.get<const class_ro_t *>(&ro_or_rw_ext)->baseMethods};
         }
     }
-
+    // 属性列表
     const property_array_t properties() const {
         auto v = get_ro_or_rwe();
         if (v.is<class_rw_ext_t *>()) {
@@ -1601,7 +1602,7 @@ public:
             return property_array_t{v.get<const class_ro_t *>(&ro_or_rw_ext)->baseProperties};
         }
     }
-
+    // 协议列表
     const protocol_array_t protocols() const {
         auto v = get_ro_or_rwe();
         if (v.is<class_rw_ext_t *>()) {
@@ -1612,12 +1613,12 @@ public:
     }
 };
 
-
+// MARK: class_data_bits_t
 struct class_data_bits_t {
-    friend objc_class;
+    friend objc_class; // 可以对objc_class私有数据进行操作
 
     // Values are the FAST_ flags above.
-    uintptr_t bits;
+    uintptr_t bits; // bits
 private:
     bool getBit(uintptr_t bit) const
     {
@@ -1644,7 +1645,7 @@ private:
     }
 
 public:
-
+    // class_rw_t存储 实例方法 属性 协议
     class_rw_t* data() const {
         return (class_rw_t *)(bits & FAST_DATA_MASK);
     }
@@ -1723,15 +1724,15 @@ public:
     }
 };
 
-
+// MARK: 类对象
 struct objc_class : objc_object {
   objc_class(const objc_class&) = delete;
   objc_class(objc_class&&) = delete;
   void operator=(const objc_class&) = delete;
   void operator=(objc_class&&) = delete;
-    // Class ISA;
-    Class superclass;
-    cache_t cache;             // formerly cache pointer and vtable
+    // Class ISA; // 8, 类对象也有isa指针,继承自objc_object, 指向元类
+    Class superclass; // 8, 父类
+    cache_t cache;    // 16         // formerly cache pointer and vtable
     class_data_bits_t bits;    // class_rw_t * plus custom rr/alloc flags
 
     Class getSuperclass() const {

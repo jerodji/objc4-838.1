@@ -9,7 +9,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface LGTeacher : NSObject
+@interface Teacher : NSObject
 
 @property (nonatomic, copy) NSString *hobby;
 

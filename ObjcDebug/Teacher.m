@@ -5,9 +5,9 @@
 //  Created by zs on 2021/9/24.
 //
 
-#import "LGTeacher.h"
+#import "Teacher.h"
 
-@implementation LGTeacher
+@implementation Teacher
 
 - (instancetype)init {
     if (self == [super init]) {

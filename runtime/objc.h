@@ -35,6 +35,7 @@
 
 #if !OBJC_TYPES_DEFINED
 /// An opaque type that represents an Objective-C class.
+/// 结构体指针, 类对象就是这个结构体
 typedef struct objc_class *Class;
 
 /// Represents an instance of a class.

@@ -6276,7 +6276,7 @@ static void resolveInstanceMethod(id inst, SEL sel, Class cls)
         // Resolver not implemented.
         return;
     }
-
+    // objc_msgSend 调用类方法 @selector(resolveInstanceMethod:)
     BOOL (*msg)(Class, SEL, SEL) = (typeof(msg))objc_msgSend;
     bool resolved = msg(cls, resolve_sel, sel);
 
@@ -6421,7 +6421,7 @@ static IMP _lookUpImpTryCache(id inst, SEL sel, Class cls, int behavior)
         imp = cache_getImp(cls->cache.preoptFallbackClass(), sel);
     }
 #endif
-    if (slowpath(imp == NULL)) {
+    if (slowpath(imp == NULL)) { // 没有实现就再次调用 lookUpImpOrForward, behavior = 1
         return lookUpImpOrForward(inst, sel, cls, behavior);
     }
 
@@ -6542,9 +6542,9 @@ IMP lookUpImpOrForward(id inst, SEL sel, Class cls, int behavior)
     }
 
     // No implementation found. Try method resolver once.
-
-    if (slowpath(behavior & LOOKUP_RESOLVER)) {
-        behavior ^= LOOKUP_RESOLVER;
+    // 没有实现。尝试一次方法解析器。
+    if (slowpath(behavior & LOOKUP_RESOLVER)) { // 第1次: 11&10 = 10, 第2次: 01&10 = 0
+        behavior ^= LOOKUP_RESOLVER; // 11^10 = 01
         return resolveMethod_locked(inst, sel, cls, behavior);
     }
 

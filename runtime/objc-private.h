@@ -109,7 +109,7 @@ public:
     Class getDecodedClass(bool authenticated);
 };
 
-
+// MARK: 对象的本质 就是这个结构体
 struct objc_object {
 private:
     isa_t isa;
