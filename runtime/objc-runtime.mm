@@ -512,7 +512,7 @@ _objc_pthread_data *_objc_fetch_pthread_data(bool create)
     data = (_objc_pthread_data *)tls_get(_objc_pthread_key);
     if (!data  &&  create) {
         data = (_objc_pthread_data *)
-            calloc(1, sizeof(_objc_pthread_data));
+            calloc(1, sizeof(_objc_pthread_data)); //如果没有TLS数据,开辟TLS存储空间
         tls_set(_objc_pthread_key, data);
     }
 

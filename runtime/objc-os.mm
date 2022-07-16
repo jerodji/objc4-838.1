@@ -465,7 +465,7 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     // This function is called before ordinary library initializers. 
     // fixme defer initialization until an objc-using image is found?
     if (firstTime) {
-        preopt_init();
+        preopt_init(); /** ji: dyld共享缓存的优化处理, 不需要重点关注 */
     }
 
     if (PrintImages) {
@@ -475,7 +475,7 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
 
     // Find all images with Objective-C metadata.
     hCount = 0;
-
+    /** ji: 统计所有的类 */
     // Count classes. Size various table based on the total.
     int totalClasses = 0;
     int unoptimizedTotalClasses = 0;
@@ -483,7 +483,7 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
         uint32_t i = mhCount;
         while (i--) {
             const headerType *mhdr = (const headerType *)mhdrs[i];
-
+            /** ji: 读取macho头部文件 */
             auto hi = addHeader(mhdr, mhPaths[i], totalClasses, unoptimizedTotalClasses);
             if (!hi) {
                 // no objc data in this entry
@@ -539,8 +539,8 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     // executable does not contain Objective-C code but Objective-C 
     // is dynamically loaded later.
     if (firstTime) {
-        sel_init(selrefCount);
-        arr_init();
+        sel_init(selrefCount);/** ji: c++构造函数/析构方法 */
+        arr_init();/** ji: 自动释放池,sidetale,关联对象 初始化 */
 
 #if SUPPORT_GC_COMPAT
         // Reject any GC images linked to the main executable.
@@ -594,7 +594,7 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     }
 
     if (hCount > 0) {
-        _read_images(hList, hCount, totalClasses, unoptimizedTotalClasses);
+        _read_images(hList, hCount, totalClasses, unoptimizedTotalClasses); /** ji: 重点 */
     }
 
     firstTime = NO;
@@ -919,7 +919,7 @@ void _objc_atfork_child()
 * Bootstrap initialization. Registers our image notifier with dyld.
 * Called by libSystem BEFORE library initialization time
 **********************************************************************/
-
+/**ji: _objc_init */
 void _objc_init(void)
 {
     static bool initialized = false;
@@ -927,16 +927,16 @@ void _objc_init(void)
     initialized = true;
     
     // fixme defer initialization until an objc-using image is found?
-    environ_init();
-    tls_init();
-    static_init();
-    runtime_init();
-    exception_init();
+    environ_init(); /**ji: 环境初始化 */
+    tls_init(); /**ji: tls -- 线程的局部存储 */
+    static_init(); /**ji: 可以在main函数前执行函数 */
+    runtime_init();/**ji: 分类表, 类表 */
+    exception_init();/**ji: 异常处理的初始化 */
 #if __OBJC2__
-    cache_t::init();
+    cache_t::init();/**ji: 每个类 ? 缓存的初始化 */
 #endif
-    _imp_implementationWithBlock_init();
-
+    _imp_implementationWithBlock_init(); // MacOS
+    /**ji: 注册函数到dyld, map_images给地址, load_images给值 */
     _dyld_objc_notify_register(&map_images, load_images, unmap_image);
 
 #if __OBJC2__

@@ -470,7 +470,7 @@ public:
     inline bool isConstantOptimizedCacheWithInlinedSels() const { return false; }
     inline void initializeToEmptyOrPreoptimizedInDisguise() { initializeToEmpty(); }
 #endif
-
+    // insert 插入
     void insert(SEL sel, IMP imp, id receiver);
     void copyCacheNolock(objc_imp_cache_entry *buffer, int len);
     void destroy();
@@ -511,7 +511,7 @@ public:
             size_t size = _flags & FAST_CACHE_ALLOC_MASK;
             // remove the FAST_CACHE_ALLOC_DELTA16 that was added
             // by setFastInstanceSize
-            return align16(size + extra - FAST_CACHE_ALLOC_DELTA16);
+            return align16(size + extra - FAST_CACHE_ALLOC_DELTA16); // 16字节对齐
         }
     }
 
@@ -1389,16 +1389,16 @@ class list_array_tt {
             newArray->count = newCount;
             array()->count = newCount;
 
-            for (int i = oldCount - 1; i >= 0; i--)
-                newArray->lists[i + addedCount] = array()->lists[i];
+            for (int i = oldCount - 1; i >= 0; i--) //倒序遍历
+                newArray->lists[i + addedCount] = array()->lists[i];//老的数据放到后面
             for (unsigned i = 0; i < addedCount; i++)
-                newArray->lists[i] = addedLists[i];
+                newArray->lists[i] = addedLists[i];//新的数据放到前面
             free(array());
             setArray(newArray);
             validate();
         }
         else if (!list  &&  addedCount == 1) {
-            // 0 lists -> 1 list
+            // 0 lists -> 1 list  只有1个分类
             list = addedLists[0];
             validate();
         } 
@@ -1555,7 +1555,7 @@ public:
         return get_ro_or_rwe().dyn_cast<class_rw_ext_t *>(&ro_or_rw_ext);
     }
 
-    class_rw_ext_t *extAllocIfNeeded() {
+    class_rw_ext_t *extAllocIfNeeded() {//创建 rwe
         auto v = get_ro_or_rwe();
         if (fastpath(v.is<class_rw_ext_t *>())) {
             return v.get<class_rw_ext_t *>(&ro_or_rw_ext);
@@ -1579,21 +1579,21 @@ public:
     void set_ro(const class_ro_t *ro) {
         auto v = get_ro_or_rwe();
         if (v.is<class_rw_ext_t *>()) {
-            v.get<class_rw_ext_t *>(&ro_or_rw_ext)->ro = ro;
+            v.get<class_rw_ext_t *>(&ro_or_rw_ext)->ro = ro; //如果是rw,转换类型替换ro指针
         } else {
-            set_ro_or_rwe(ro);
+            set_ro_or_rwe(ro);//把ro指针设置到rwe
         }
     }
-    // 方法列表
+    /**ji: 方法列表 */
     const method_array_t methods() const {
         auto v = get_ro_or_rwe();
-        if (v.is<class_rw_ext_t *>()) { //有rwe,就从rwe里面读取方法
+        if (v.is<class_rw_ext_t *>()) { /**ji: 有rwe,就从rwe里面读取方法 */
             return v.get<class_rw_ext_t *>(&ro_or_rw_ext)->methods;
-        } else { // 否则从ro里面读取方法
+        } else { /**ji: 否则从ro里面读取方法 */
             return method_array_t{v.get<const class_ro_t *>(&ro_or_rw_ext)->baseMethods};
         }
     }
-    // 属性列表
+    /**ji: 属性列表 */
     const property_array_t properties() const {
         auto v = get_ro_or_rwe();
         if (v.is<class_rw_ext_t *>()) {
@@ -1602,7 +1602,7 @@ public:
             return property_array_t{v.get<const class_ro_t *>(&ro_or_rw_ext)->baseProperties};
         }
     }
-    // 协议列表
+    /**ji: 协议列表 */
     const protocol_array_t protocols() const {
         auto v = get_ro_or_rwe();
         if (v.is<class_rw_ext_t *>()) {
@@ -1645,7 +1645,7 @@ private:
     }
 
 public:
-    // class_rw_t存储 实例方法 属性 协议
+    /**ji: rw 存储 实例方法 属性 协议 */
     class_rw_t* data() const {
         return (class_rw_t *)(bits & FAST_DATA_MASK);
     }
@@ -2175,18 +2175,18 @@ struct objc_class : objc_object {
     }
 
     // Class's ivar size rounded up to a pointer-size boundary.
-    uint32_t alignedInstanceSize() const {
+    uint32_t alignedInstanceSize() const { //8字节对齐算法
         return word_align(unalignedInstanceSize());
     }
-
+    // 计算需要开辟的内存空间大小
     inline size_t instanceSize(size_t extraBytes) const {
         if (fastpath(cache.hasFastInstanceSize(extraBytes))) {
-            return cache.fastInstanceSize(extraBytes);
+            return cache.fastInstanceSize(extraBytes);// 有缓存就快速计算,16字节对齐
         }
 
-        size_t size = alignedInstanceSize() + extraBytes;
+        size_t size = alignedInstanceSize() + extraBytes; //8字节对齐算法; extraBytes额外字节
         // CF requires all objects be at least 16 bytes.
-        if (size < 16) size = 16;
+        if (size < 16) size = 16; // <= 16, 最小16字节
         return size;
     }
 
@@ -2230,7 +2230,7 @@ struct swift_class_t : objc_class {
     }
 };
 
-
+// MARK: 分类
 struct category_t {
     const char *name;
     classref_t cls;

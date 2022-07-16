@@ -265,14 +265,14 @@ public:
   template <typename... Ts>
   std::pair<iterator, bool> try_emplace(const KeyT &Key, Ts &&... Args) {
     BucketT *TheBucket;
-    if (LookupBucketFor(Key, TheBucket))
+    if (LookupBucketFor(Key, TheBucket)) //查找
       return std::make_pair(
                makeIterator(TheBucket, getBucketsEnd(), true),
                false); // Already in map.
 
-    // Otherwise, insert the new element.
+    // Otherwise, insert the new element. 插入新的
     TheBucket = InsertIntoBucket(TheBucket, Key, std::forward<Ts>(Args)...);
-    return std::make_pair(
+    return std::make_pair( //迭代器
              makeIterator(TheBucket, getBucketsEnd(), true),
              true);
   }

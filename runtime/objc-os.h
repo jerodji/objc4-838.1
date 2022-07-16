@@ -43,15 +43,15 @@
 #   define WORD_MASK 3UL
 #   define WORD_BITS 32
 #endif
-
+// 8字节对齐的算法
 static inline uint32_t word_align(uint32_t x) {
-    return (x + WORD_MASK) & ~WORD_MASK;
+    return (x + WORD_MASK) & ~WORD_MASK; // 8字节对齐; (x+7) & ~7 ==> (x+7)&1000, 后3位抹0
 }
 static inline size_t word_align(size_t x) {
     return (x + WORD_MASK) & ~WORD_MASK;
 }
 static inline size_t align16(size_t x) {
-    return (x + size_t(15)) & ~size_t(15);
+    return (x + size_t(15)) & ~size_t(15); // 16字节对齐算法
 }
 
 // Mix-in for classes that must not be copied.
@@ -721,7 +721,7 @@ template <bool Debug> class recursive_mutex_tt;
 #   define LOCKDEBUG 0
 #endif
 
-using spinlock_t = mutex_tt<LOCKDEBUG>;
+using spinlock_t = mutex_tt<LOCKDEBUG>; //os_unfair_lock锁
 using mutex_t = mutex_tt<LOCKDEBUG>;
 using monitor_t = monitor_tt<LOCKDEBUG>;
 using recursive_mutex_t = recursive_mutex_tt<LOCKDEBUG>;

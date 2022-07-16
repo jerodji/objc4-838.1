@@ -44,7 +44,7 @@ StripedMap<spinlock_t> StructLocks;
 StripedMap<spinlock_t> CppObjectLocks;
 
 #define MUTABLE_COPY 2
-
+/**ji: objc_getProperty */
 id objc_getProperty(id self, SEL _cmd, ptrdiff_t offset, BOOL atomic) {
     if (offset == 0) {
         return object_getClass(self);
@@ -66,7 +66,7 @@ id objc_getProperty(id self, SEL _cmd, ptrdiff_t offset, BOOL atomic) {
 
 
 static inline void reallySetProperty(id self, SEL _cmd, id newValue, ptrdiff_t offset, bool atomic, bool copy, bool mutableCopy) __attribute__((always_inline));
-
+/**ji: reallySetProperty */
 static inline void reallySetProperty(id self, SEL _cmd, id newValue, ptrdiff_t offset, bool atomic, bool copy, bool mutableCopy)
 {
     if (offset == 0) {

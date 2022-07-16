@@ -321,7 +321,7 @@ objc_object::initInstanceIsa(Class cls, bool hasCxxDtor)
 #else
 #define UNUSED_WITHOUT_INDEXED_ISA_AND_DTOR_BIT
 #endif
-
+/**ji: 初始化isa */
 inline void 
 objc_object::initIsa(Class cls, bool nonpointer, UNUSED_WITHOUT_INDEXED_ISA_AND_DTOR_BIT bool hasCxxDtor)
 { 
@@ -352,7 +352,7 @@ objc_object::initIsa(Class cls, bool nonpointer, UNUSED_WITHOUT_INDEXED_ISA_AND_
 #   endif
         newisa.setClass(cls, this);
 #endif
-        newisa.extra_rc = 1;
+        newisa.extra_rc = 1; //extra_rc引用计数
     }
 
     // This write must be performed in a single store in some cases
@@ -614,7 +614,7 @@ objc_object::rootRetain(bool tryRetain, objc_object::RRVariant variant)
 
     bool sideTableLocked = false;
     bool transcribeToSideTable = false;
-
+    // 获取isa指针
     isa_t oldisa;
     isa_t newisa;
 
@@ -650,7 +650,7 @@ objc_object::rootRetain(bool tryRetain, objc_object::RRVariant variant)
             else return sidetable_retain(sideTableLocked);
         }
         // don't check newisa.fast_rr; we already called any RR overrides
-        if (slowpath(newisa.isDeallocating())) {
+        if (slowpath(newisa.isDeallocating())) { //是否正在释放
             ClearExclusive(&isa.bits);
             if (sideTableLocked) {
                 ASSERT(variant == RRVariant::Full);
@@ -665,6 +665,7 @@ objc_object::rootRetain(bool tryRetain, objc_object::RRVariant variant)
         uintptr_t carry;
         newisa.bits = addc(newisa.bits, RC_ONE, 0, &carry);  // extra_rc++
 
+        //是nonpointerisa, extra_rc存不下, 一半存到sidetable
         if (slowpath(carry)) {
             // newisa.extra_rc++ overflowed
             if (variant != RRVariant::Full) {
@@ -677,14 +678,14 @@ objc_object::rootRetain(bool tryRetain, objc_object::RRVariant variant)
             sideTableLocked = true;
             transcribeToSideTable = true;
             newisa.extra_rc = RC_HALF;
-            newisa.has_sidetable_rc = true;
+            newisa.has_sidetable_rc = true; //sidetable标志位
         }
     } while (slowpath(!StoreExclusive(&isa.bits, &oldisa.bits, newisa.bits)));
 
     if (variant == RRVariant::Full) {
         if (slowpath(transcribeToSideTable)) {
             // Copy the other half of the retain counts to the side table.
-            sidetable_addExtraRC_nolock(RC_HALF);
+            sidetable_addExtraRC_nolock(RC_HALF); //一半存到sidetable里面
         }
 
         if (slowpath(!tryRetain && sideTableLocked)) sidetable_unlock();
@@ -766,9 +767,9 @@ objc_object::rootRelease(bool performDealloc, objc_object::RRVariant variant)
 retry:
     do {
         newisa = oldisa;
-        if (slowpath(!newisa.nonpointer)) {
+        if (slowpath(!newisa.nonpointer)) { //非优化指针(纯指针)
             ClearExclusive(&isa.bits);
-            return sidetable_release(sideTableLocked, performDealloc);
+            return sidetable_release(sideTableLocked, performDealloc);//sidetable计数-1
         }
         if (slowpath(newisa.isDeallocating())) {
             ClearExclusive(&isa.bits);
@@ -804,7 +805,7 @@ retry:
     // abandon newisa to undo the decrement
     newisa = oldisa;
 
-    if (slowpath(newisa.has_sidetable_rc)) {
+    if (slowpath(newisa.has_sidetable_rc)) {//有sidetable
         if (variant != RRVariant::Full) {
             ClearExclusive(&isa.bits);
             return rootRelease_underflow(performDealloc);
@@ -887,7 +888,7 @@ deallocate:
     __c11_atomic_thread_fence(__ATOMIC_ACQUIRE);
 
     if (performDealloc) {
-        ((void(*)(objc_object *, SEL))objc_msgSend)(this, @selector(dealloc));
+        ((void(*)(objc_object *, SEL))objc_msgSend)(this, @selector(dealloc));//引用计数为0了,发送dealloc消息
     }
     return true;
 }

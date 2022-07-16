@@ -80,7 +80,7 @@ void add_class_to_loadable_list(Class cls)
                               loadable_classes_allocated *
                               sizeof(struct loadable_class));
     }
-    
+    /**ji: 把存到表里, loadable_classes表存储需要调用load方法的类 */
     loadable_classes[loadable_classes_used].cls = cls;
     loadable_classes[loadable_classes_used].method = method;
     loadable_classes_used++;
@@ -99,7 +99,7 @@ void add_category_to_loadable_list(Category cat)
 
     loadMethodLock.assertLocked();
 
-    method = _category_getLoadMethod(cat);
+    method = _category_getLoadMethod(cat);//分类load方法
 
     // Don't bother if cat has no +load method
     if (!method) return;
@@ -116,7 +116,7 @@ void add_category_to_loadable_list(Category cat)
                               loadable_categories_allocated *
                               sizeof(struct loadable_category));
     }
-
+    //加到loadable_categories表
     loadable_categories[loadable_categories_used].cat = cat;
     loadable_categories[loadable_categories_used].method = method;
     loadable_categories_used++;
@@ -348,6 +348,7 @@ void call_load_methods(void)
     void *pool = objc_autoreleasePoolPush();
 
     do {
+        // 本类load -> 分类load
         // 1. Repeatedly call class +loads until there aren't any more
         while (loadable_classes_used > 0) {
             call_class_loads();

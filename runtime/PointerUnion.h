@@ -61,7 +61,7 @@ struct PointerUnionTypeSelectorReturn<
 
 template <class T1, class T2, typename Auth1, typename Auth2>
 class PointerUnion {
-    uintptr_t _value;
+    uintptr_t _value; /**ji: ro?, 指针, rw内部一个指针指向ro */
 
     static_assert(alignof(T1) >= 2, "alignment requirement");
     static_assert(alignof(T2) >= 2, "alignment requirement");

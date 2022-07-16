@@ -2205,7 +2205,7 @@ static void startWeakTableScan() {
         _objc_fatal("pthread_create failed with error %d (%s)", ret, strerror(ret));
     pthread_detach(thread);
 }
-
+/* 123 */
 void arr_init(void) 
 {
     AutoreleasePoolPage::init();
@@ -2553,7 +2553,7 @@ __attribute__((objc_nonlazy_class))
 - (NSUInteger)retainCount {
     return _objc_rootRetainCount(self);
 }
-
+/**ji: alloc */
 + (id)alloc {
     return _objc_rootAlloc(self);
 }

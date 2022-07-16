@@ -703,7 +703,7 @@ extern void logReplacedMethod(const char *className, SEL s, bool isMeta, const c
 // objc per-thread storage
 typedef struct {
     struct _objc_initializing_classes *initializingClasses; // for +initialize
-    struct SyncCache *syncCache;  // for @synchronize
+    struct SyncCache *syncCache;  // for @synchronize   synchronize锁
     struct alt_handler_list *handlerList;  // for exception alt handlers
     char *printableNames[4];  // temporary demangled names for logging
     const char **classNameLookups;  // for objc_getClass() hooks
@@ -713,7 +713,7 @@ typedef struct {
     // If you add new fields here, don't forget to update 
     // _objc_pthread_destroyspecific()
 
-} _objc_pthread_data;
+} _objc_pthread_data; //objc线程私有数据, TLS的数据
 
 extern _objc_pthread_data *_objc_fetch_pthread_data(bool create);
 extern void tls_init(void);
@@ -911,12 +911,12 @@ enum { CacheLineSize = 64 };
 // for cache-friendly lock striping. 
 // For example, this may be used as StripedMap<spinlock_t>
 // or as StripedMap<SomeStruct> where SomeStruct stores a spin lock.
-template<typename T>
-class StripedMap {
+template<typename T>//模板类
+class StripedMap { //哈希表, 用来缓存带spinlock锁能力的类或结构体
 #if TARGET_OS_IPHONE && !TARGET_OS_SIMULATOR
-    enum { StripeCount = 8 };
+    enum { StripeCount = 8 };   //真机,空间换时间,不同的加锁对象放在不同的表中; 如果是1张表,所有的加锁对象必须等当前正在执行的对象解锁后才能执行; 但是也不能无限多的表,太浪费空间,所以有这8张表的折中方式; 只查询8张表比模拟器64张表效率快;
 #else
-    enum { StripeCount = 64 };
+    enum { StripeCount = 64 };  //模拟器
 #endif
 
     struct PaddedT {
@@ -924,14 +924,14 @@ class StripedMap {
     };
 
     PaddedT array[StripeCount];
-
+    //下标算法
     static unsigned int indexForPointer(const void *p) {
         uintptr_t addr = reinterpret_cast<uintptr_t>(p);
         return ((addr >> 4) ^ (addr >> 9)) % StripeCount;
     }
 
  public:
-    T& operator[] (const void *p) { 
+    T& operator[] (const void *p) { //重载[]运算符,在array中查找对象,返回对象的引用
         return array[indexForPointer(p)].value; 
     }
     const T& operator[] (const void *p) const { 

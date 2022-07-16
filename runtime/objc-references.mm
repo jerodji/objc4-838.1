@@ -47,8 +47,8 @@ spinlock_t AssociationsManagerLock;
 namespace objc {
 
 class ObjcAssociation {
-    uintptr_t _policy;
-    id _value;
+    uintptr_t _policy;//策略
+    id _value;//值
 public:
     ObjcAssociation(uintptr_t policy, id value) : _policy(policy), _value(value) {}
     ObjcAssociation() : _policy(0), _value(nil) {}
@@ -100,21 +100,21 @@ public:
 };
 
 typedef DenseMap<const void *, ObjcAssociation> ObjectAssociationMap;
-typedef DenseMap<DisguisedPtr<objc_object>, ObjectAssociationMap> AssociationsHashMap;
+typedef DenseMap<DisguisedPtr<objc_object>, ObjectAssociationMap> AssociationsHashMap;//DenseMap哈希表
 
 // class AssociationsManager manages a lock / hash table singleton pair.
 // Allocating an instance acquires the lock
 
 class AssociationsManager {
     using Storage = ExplicitInitDenseMap<DisguisedPtr<objc_object>, ObjectAssociationMap>;
-    static Storage _mapStorage;
+    static Storage _mapStorage; //全局
 
 public:
-    AssociationsManager()   { AssociationsManagerLock.lock(); }
-    ~AssociationsManager()  { AssociationsManagerLock.unlock(); }
+    AssociationsManager()   { AssociationsManagerLock.lock(); } //构造函数
+    ~AssociationsManager()  { AssociationsManagerLock.unlock(); } //析构函数
 
     AssociationsHashMap &get() {
-        return _mapStorage.get();
+        return _mapStorage.get();//全局
     }
 
     static void init() {
@@ -142,10 +142,10 @@ _object_get_associative_reference(id object, const void *key)
     {
         AssociationsManager manager;
         AssociationsHashMap &associations(manager.get());
-        AssociationsHashMap::iterator i = associations.find((objc_object *)object);
+        AssociationsHashMap::iterator i = associations.find((objc_object *)object);//通过objcet找
         if (i != associations.end()) {
             ObjectAssociationMap &refs = i->second;
-            ObjectAssociationMap::iterator j = refs.find(key);
+            ObjectAssociationMap::iterator j = refs.find(key);//通过key找
             if (j != refs.end()) {
                 association = j->second;
                 association.retainReturnedValue();
@@ -153,7 +153,7 @@ _object_get_associative_reference(id object, const void *key)
         }
     }
 
-    return association.autoreleaseReturnedValue();
+    return association.autoreleaseReturnedValue();//放入自动释放池
 }
 
 void
@@ -167,16 +167,16 @@ _object_set_associative_reference(id object, const void *key, id value, uintptr_
     if (object->getIsa()->forbidsAssociatedObjects())
         _objc_fatal("objc_setAssociatedObject called on instance (%p) of class %s which does not allow associated objects", object, object_getClassName(object));
 
-    DisguisedPtr<objc_object> disguised{(objc_object *)object};
-    ObjcAssociation association{policy, value};
+    DisguisedPtr<objc_object> disguised{(objc_object *)object}; /**ji: object */
+    ObjcAssociation association{policy, value}; /**ji: 策略和值 */
 
     // retain the new value (if any) outside the lock.
-    association.acquireValue();
+    association.acquireValue(); //策略处理
 
     bool isFirstAssociation = false;
     {
-        AssociationsManager manager;
-        AssociationsHashMap &associations(manager.get());
+        AssociationsManager manager; // AssociationsManagerLock.lock()
+        AssociationsHashMap &associations(manager.get());//哈希表, 全局
 
         if (value) {
             auto refs_result = associations.try_emplace(disguised, ObjectAssociationMap{});
@@ -192,7 +192,7 @@ _object_set_associative_reference(id object, const void *key, id value, uintptr_
                 association.swap(result.first->second);
             }
         } else {
-            auto refs_it = associations.find(disguised);
+            auto refs_it = associations.find(disguised); //删除关联
             if (refs_it != associations.end()) {
                 auto &refs = refs_it->second;
                 auto it = refs.find(key);
@@ -206,7 +206,7 @@ _object_set_associative_reference(id object, const void *key, id value, uintptr_
                 }
             }
         }
-    }
+    }// AssociationsManagerLock.unlock()
 
     // Call setHasAssociatedObjects outside the lock, since this
     // will call the object's _noteAssociatedObjects method if it
@@ -224,7 +224,7 @@ _object_set_associative_reference(id object, const void *key, id value, uintptr_
 // raw isa objects (such as OS Objects) that can't track
 // whether they have associated objects.
 void
-_object_remove_assocations(id object, bool deallocating)
+_object_remove_assocations(id object, bool deallocating) /**ji: 移除关联对象 */
 {
     ObjectAssociationMap refs{};
 
@@ -264,6 +264,6 @@ _object_remove_assocations(id object, bool deallocating)
         }
     }
     for (auto *later: laterRefs) {
-        later->releaseHeldValue();
+        later->releaseHeldValue();//release
     }
 }
